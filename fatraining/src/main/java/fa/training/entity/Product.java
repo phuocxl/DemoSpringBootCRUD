@@ -26,6 +26,9 @@ public class Product {
     @Column(name = "color")
     @NotEmpty(message = "Please enter color")
     private String color;
+    @ManyToOne
+    @JoinColumn(name = "categoryId")
+    private Category category;
 
     public Product() {
     }
@@ -93,5 +96,18 @@ public class Product {
 
     public void setColor(String color) {
         this.color = color;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "id=" + id +
+                ", productName='" + productName + '\'' +
+                ", catalogy='" + catalogy + '\'' +
+                ", desc='" + desc + '\'' +
+                ", price=" + price +
+                ", color='" + color + '\'' +
+                ", category=" + category +
+                '}';
     }
 }

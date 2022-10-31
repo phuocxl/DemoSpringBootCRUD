@@ -3,6 +3,8 @@ package fa.training.service;
 import fa.training.entity.Product;
 import fa.training.repository.ProductRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -60,10 +62,21 @@ public class ProductServiceImpl implements ProductService{
         return productRepository.getReferenceById(id);
     }
 
+
+
     @Override
     public List<Product> findByProductNameContaining(String name) {
         return productRepository.findByProductNameContaining(name);
     }
 
+    @Override
+    public Page<Product> getPageProduct(Pageable pageable) {
+        return productRepository.findAll(pageable);
+    }
 
+
+    @Override
+    public Page<Product> findByProductNameContaining(String name, Pageable pageable) {
+        return productRepository.findByProductNameContaining(name, pageable);
+    }
 }

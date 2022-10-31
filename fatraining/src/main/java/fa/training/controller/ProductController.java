@@ -1,8 +1,13 @@
 package fa.training.controller;
 
 import fa.training.entity.Product;
+import fa.training.repository.ProductRepository;
 import fa.training.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -11,13 +16,14 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 
 @Controller
 //@RestController
 
 public class ProductController {
-
 
     @Autowired
     private ProductService productService;
@@ -33,8 +39,53 @@ public class ProductController {
         } else {
             listSearch = productService.getProduct();
         }
-
         model.addAttribute("product", listSearch);
+        return "index--";
+    }
+
+    @GetMapping("/paginated")
+    //paginated
+    public String getAllProduct(Model model, @RequestParam(name="name", required = false) String name,
+                                @RequestParam("page") Optional<Integer> page,
+                                @RequestParam("size") Optional<Integer> size) {
+
+        int currentPage = page.orElse(0);
+        int pageSize = size.orElse(5);
+
+        Pageable pageable = PageRequest.of(currentPage, pageSize);
+        //Sort.by("fullName")
+        Page<Product> resultPage = null;
+
+
+        if(StringUtils.hasText(name)) {
+            resultPage = productService.findByProductNameContaining(name,pageable);
+            model.addAttribute("name", name);
+        } else {
+            resultPage = productService.getPageProduct(pageable);
+        }
+
+        int totalPages = resultPage.getTotalPages();
+        if(totalPages > 0) {
+            int start = Math.max(1, currentPage-2);
+            int end = Math.min(currentPage +2, totalPages);
+
+            if(totalPages > 5) {
+                if(end == totalPages){
+                    start = end - 5;
+                } else if (start ==1) {
+                    end = start +5;
+                }
+            }
+
+            List<Integer> pageNumber = IntStream.rangeClosed(start,end)
+                    .boxed()
+                    .collect(Collectors.toList());
+            model.addAttribute("pageNumber", pageNumber);
+
+        }
+
+        System.out.println(resultPage.toString());
+        model.addAttribute("product", resultPage);
         return "index";
     }
 
@@ -49,7 +100,7 @@ public class ProductController {
     @PostMapping("/list")
     public String saveProduct(@ModelAttribute("save") Product product) {
         productService.addProduct(product);
-        return "redirect:/list";
+        return "redirect:/paginated";
     }
 
     @GetMapping("/list/update/{id}")
@@ -63,13 +114,13 @@ public class ProductController {
     @PostMapping("/update/{id}")
     public String updateProduct(@PathVariable("id") Long id, @ModelAttribute("product") Product product) {
          productService.updateProduct(id, product);
-        return "redirect:/list";
+        return "redirect:/paginated";
     }
 
     @GetMapping("/delete/{id}")
     public  String deleteProduct(@PathVariable("id") Long id) {
         productService.deleteProduct(id);
-        return "redirect:/list";
+        return "redirect:/paginated";
     }
 
 
