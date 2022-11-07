@@ -1,6 +1,7 @@
 package fa.training.controller;
 
 import fa.training.entity.Product;
+import fa.training.model.DataRespose;
 import fa.training.repository.ProductRepository;
 import fa.training.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
@@ -20,13 +23,99 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
-@Controller
-//@RestController
+//@Controller
+@RestController
 
 public class ProductController {
 
     @Autowired
     private ProductService productService;
+
+
+    // RestAPI
+
+    //get All
+    @GetMapping("/getAll")
+    public ResponseEntity<DataRespose> getAllProduct() {
+        List<Product> product = productService.getProduct();
+        if(product.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new DataRespose("error","cannot find product")
+            );
+        } else {
+
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new DataRespose(product)
+            );
+        }
+
+    }
+
+    @GetMapping("/getOneProduct/{id}")
+    public ResponseEntity<DataRespose> getOneProduct(@PathVariable("id") Long id) {
+        Optional<Product> product = productService.getOneProduct(id);
+        if(product.isPresent()) {
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new DataRespose(product)
+            );
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(
+                    new DataRespose("error","cannot find product id=" +id )
+            );
+        }
+
+    }
+
+    //Add product
+    @PostMapping("/add")
+    public ResponseEntity<DataRespose> addProduct2(@RequestBody Product product) {
+
+        List<Product> productName = productService.findByProductName(product.getProductName().trim());
+
+        if(productName.size()>0) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new DataRespose("","product name already taken")
+            );
+        }
+
+        return ResponseEntity.status(HttpStatus.OK).body(
+                new DataRespose("","add success",productService.addProduct(product))
+        );
+    }
+
+    //Update Product
+    @PutMapping("/update/{id}")
+    public ResponseEntity<DataRespose> updateProduct1(@PathVariable("id") Long id, @RequestBody Product product) {
+        Optional<Product> product1 = productService.getOneProduct(id);
+        if (product1.isPresent()) {
+            List<Product> productName = productService.findByProductName(product.getProductName().trim());
+            System.out.println(productName);
+            if (productName.size() > 0) {
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                        new DataRespose("", "product name already taken")
+                );
+            }
+            return ResponseEntity.status(HttpStatus.OK).body(
+                    new DataRespose("", "update success", productService.updateProduct(id,product))
+            );
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(
+                    new DataRespose("", "cannot product id="+id)
+            );
+
+        }
+    }
+
+    //Delete Product
+    @DeleteMapping("/delete/{id}")
+    public boolean deleteProduct1 (@PathVariable("id")Long id) {
+        return productService.deleteProduct(id);
+    }
+
+
+
+
+
     //Thymeleaf
 
     @GetMapping("/list")
@@ -84,7 +173,6 @@ public class ProductController {
 
         }
 
-        System.out.println(resultPage.toString());
         model.addAttribute("product", resultPage);
         return "index";
     }
@@ -105,7 +193,7 @@ public class ProductController {
 
     @GetMapping("/list/update/{id}")
     public String viewUpdateProduct( @PathVariable("id") Long id, Model model) {
-        Optional<Product> product = Optional.ofNullable(productService.getOneProduct(id));
+        Optional<Product> product = productService.getOneProduct(id);
         Product product1 = product.get();
         model.addAttribute("product", product1);
         return "update";
@@ -123,40 +211,6 @@ public class ProductController {
         return "redirect:/paginated";
     }
 
-
-
-
-
-
-
-
-
-
-
-    // API
-    //get All
-    @GetMapping("/list1")
-    public List<Product> getAllProduct() {
-        return productService.getProduct();
-    }
-
-    //Add product
-    @PostMapping("/add1")
-    public Product addProduct(@RequestBody Product product) {
-        return productService.addProduct(product);
-    }
-
-    //Update Product
-    @PutMapping("/update1")
-    public Product updateProduct1(@RequestParam("id") Long id, @RequestBody Product product) {
-        return productService.updateProduct(id, product);
-    }
-
-    //Delete Product
-    @DeleteMapping("/delete1/{id}")
-    public boolean deleteProduct1 (@PathVariable("id")Long id) {
-        return productService.deleteProduct(id);
-    }
 
 
 }

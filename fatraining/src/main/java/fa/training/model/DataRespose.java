@@ -31,6 +31,15 @@ public class DataRespose {
         this.data = data;
     }
 
+    public DataRespose() {
+    }
+
+    public DataRespose(String error, String message, Object data) {
+        this.error = error;
+        this.message = message;
+        this.data = data;
+    }
+
     public DataRespose(Object data) {
         this.data = data;
         this.message ="success";
