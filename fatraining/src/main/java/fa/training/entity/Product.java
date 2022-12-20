@@ -1,5 +1,9 @@
 package fa.training.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -14,9 +18,6 @@ public class Product {
     @Column(name = "product_name")
     @NotEmpty(message = "Please enter productName")
     private String productName;
-    @Column(name = "catalogy")
-    @NotEmpty(message = "Please enter category")
-    private String catalogy;
     @Column(name = "desc")
     @NotEmpty(message = "Please enter desc")
     private String desc;
@@ -27,27 +28,31 @@ public class Product {
     @NotEmpty(message = "Please enter color")
     private String color;
     @ManyToOne
-    @JoinColumn(name = "categoryId")
+    @JoinColumn(name = "categoryId", nullable = false, referencedColumnName = "categoryId")
+//    @JsonIgnore
+//    @JsonBackReference
     private Category category;
-
     public Product() {
     }
 
-    public Product(String productName, String catalogy, String desc, Long price, String color) {
-        this.productName = productName;
-        this.catalogy = catalogy;
-        this.desc = desc;
-        this.price = price;
-        this.color = color;
-    }
-
-    public Product(Long id, String productName, String catalogy, String desc, Long price, String color) {
+    public Product(Long id, String productName, String desc, Long price, String color, Category category) {
         this.id = id;
         this.productName = productName;
-        this.catalogy = catalogy;
         this.desc = desc;
         this.price = price;
         this.color = color;
+        this.category = category;
+    }
+
+    public Product(@NotEmpty(message = "Please enter productName") String productName,
+                   @NotEmpty(message = "Please enter color") String color,
+                   @NotNull(message = "Please enter price") String desc,
+                   @NotNull(message = "Please enter price") long price) {
+        this.productName = productName;
+        this.color = color;
+        this.desc = desc;
+        this.price = price;
+
     }
 
     public Long getId() {
@@ -64,14 +69,6 @@ public class Product {
 
     public void setProductName(String productName) {
         this.productName = productName;
-    }
-
-    public String getCatalogy() {
-        return catalogy;
-    }
-
-    public void setCatalogy(String catalogy) {
-        this.catalogy = catalogy;
     }
 
     public String getDesc() {
@@ -98,16 +95,11 @@ public class Product {
         this.color = color;
     }
 
-    @Override
-    public String toString() {
-        return "Product{" +
-                "id=" + id +
-                ", productName='" + productName + '\'' +
-                ", catalogy='" + catalogy + '\'' +
-                ", desc='" + desc + '\'' +
-                ", price=" + price +
-                ", color='" + color + '\'' +
-                ", category=" + category +
-                '}';
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
     }
 }
